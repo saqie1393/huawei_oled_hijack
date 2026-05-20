@@ -15,31 +15,22 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4  # Updated to v4
+        uses: actions/checkout@v4
 
-      - name: Install NDK
+      - name: Install NDK r23c (newer, better clang support)
         run: |
-          # Download and extract NDK directly
-          wget https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip
-          unzip android-ndk-r16b-linux-x86_64.zip
-          echo "ANDROID_NDK_HOME=${GITHUB_WORKSPACE}/android-ndk-r16b" >> $GITHUB_ENV
-          echo "${GITHUB_WORKSPACE}/android-ndk-r16b" >> $GITHUB_PATH
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang
+          wget https://dl.google.com/android/repository/android-ndk-r23c-linux.zip
+          unzip -q android-ndk-r23c-linux.zip
+          echo "ANDROID_NDK_HOME=${GITHUB_WORKSPACE}/android-ndk-r23c" >> $GITHUB_ENV
 
       - name: Build oled_hijack.so
         run: |
-          # Using clang with Android NDK toolchain
           export NDK=${ANDROID_NDK_HOME}
           export TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/linux-x86_64
           export TARGET=armv7a-linux-androideabi
           export API=19
           
           $TOOLCHAIN/bin/${TARGET}${API}-clang \
-            --target=arm-linux-androideabi \
             -shared -ldl -fPIC -O2 -s \
             -D__ANDROID_API__=19 \
             -DMENU_UNLOCK -DNET_UPDOWN \
@@ -47,7 +38,7 @@ jobs:
             oled_hijack_so.c
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4  # Updated to v4
+        uses: actions/upload-artifact@v4
         with:
           name: oled_hijack
           path: oled_hijack.so
